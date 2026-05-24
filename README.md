@@ -1,5 +1,7 @@
 # Quartermaster
 
+> **Live:** [quartermaster-azure.vercel.app](https://quartermaster-azure.vercel.app)
+
 A surf-provisions dispatch: real-time wetsuit and accessory recommendations
 based on live water-surface temperature, air temperature, wind, swell, and
 tide. Default port is **Lido Beach, New York** — search any coastline
@@ -89,6 +91,25 @@ components/      React components
 lib/             API client, recommendation logic, weather codes, ledger
 public/          Favicon
 ```
+
+## Design notes
+
+The app was built iteratively in a single Claude Code session and shaped
+by two opinionated reviews — one engineering-focused, one design-focused —
+applied as a full action pass:
+
+- **Engineering pass:** Air-temperature fallback when SST is unavailable,
+  wind-chill modifiers that fire across all bands (not just one), proper
+  ARIA combobox keyboard navigation with `AbortController` for stale
+  debounced fetches, UTC dispatch numbers, seconds-overflow correction in
+  DMS coordinate formatting.
+- **Design pass:** Lead with the answer (wetsuit recommendation above the
+  telemetry, not below it), trim the costume (no decorative corner-marks,
+  no Roman-numeral year in the footer, no glyph bullets for required vs.
+  optional — typography carries that distinction), add tomorrow.
+
+The "tomorrow" addition is the killer feature: surfers decide about dawn
+patrol the night before, not the morning of.
 
 ## License
 
