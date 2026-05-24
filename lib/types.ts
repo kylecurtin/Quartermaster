@@ -15,6 +15,21 @@ export interface GeocodingResult {
   longitude: number;
 }
 
+export interface HourlySnapshot {
+  time: string;
+  airTempF: number;
+  windMph: number;
+  windDirectionDeg: number;
+  weatherCode: number;
+  waterTempF: number | null;
+  waveHeightFt: number | null;
+}
+
+export interface TidePoint {
+  time: string;
+  heightFt: number;
+}
+
 export interface Conditions {
   waterTempF: number | null;
   waveHeightFt: number | null;
@@ -32,6 +47,8 @@ export interface Conditions {
   pressureHpa: number;
   timestamp: string;
   timezone: string;
+  hourly: HourlySnapshot[];
+  tide: TidePoint[];
 }
 
 export const LIDO_BEACH: Location = {

@@ -3,10 +3,12 @@
 import { useEffect, useState } from 'react';
 import type { Conditions, Location } from '@/lib/types';
 import { fetchConditions } from '@/lib/api';
+import { useLedger } from '@/lib/ledger';
 import { weatherDescription } from '@/lib/weather';
 import { ConditionsReadout } from './ConditionsReadout';
 import { GearDispatch } from './GearDispatch';
 import { LocationSearch } from './LocationSearch';
+import { TomorrowDispatch } from './TomorrowDispatch';
 
 interface Props {
   initialLocation: Location;
@@ -21,6 +23,8 @@ export function AppShell({ initialLocation, initialData }: Props) {
     initialData ? null : 'Initial telemetry unavailable — retrying',
   );
   const [dispatchNow, setDispatchNow] = useState<Date | null>(null);
+
+  const ledger = useLedger();
 
   // Defer Date() to client to avoid SSR/CSR hydration mismatch
   useEffect(() => {
@@ -59,6 +63,7 @@ export function AppShell({ initialLocation, initialData }: Props) {
 
   const weather = conditions ? weatherDescription(conditions.weatherCode) : null;
   const dispatchNo = dispatchNow ? formatDispatchNumber(dispatchNow) : '————.———.————';
+  const inLedger = ledger.isSaved(location);
 
   return (
     <div className="min-h-screen w-full">
@@ -92,19 +97,40 @@ export function AppShell({ initialLocation, initialData }: Props) {
 
       {/* Hero */}
       <section className="mx-auto max-w-[1400px] px-6 pb-12 pt-2 md:px-12">
-        <div className="rise rise-1 mb-3 flex flex-wrap items-baseline gap-x-4 gap-y-1">
-          <span className="font-mono text-[10px] uppercase tracking-ultra text-ink/55">
-            Provisions dispatched from
-          </span>
-          <span className="font-mono text-[10px] uppercase tracking-widest text-ink/40">
-            ⌖ {[location.admin1, location.country].filter(Boolean).join(' · ')}
-          </span>
+        <div className="rise rise-1 mb-3 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+          <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
+            <span className="font-mono text-[10px] uppercase tracking-ultra text-ink/55">
+              Provisions dispatched from
+            </span>
+            <span className="font-mono text-[10px] uppercase tracking-widest text-ink/40">
+              ⌖ {[location.admin1, location.country].filter(Boolean).join(' · ')}
+            </span>
+          </div>
+          {ledger.loaded && (
+            <button
+              type="button"
+              onClick={() =>
+                inLedger ? ledger.remove(location) : ledger.save(location)
+              }
+              aria-pressed={inLedger}
+              className={`font-mono text-[10px] uppercase tracking-widest transition-colors ${
+                inLedger ? 'text-copper hover:text-copper-deep' : 'text-ink/45 hover:text-ink'
+              }`}
+            >
+              {inLedger ? '✓ in ledger · remove' : '+ save to ledger'}
+            </button>
+          )}
         </div>
         <h1 className="rise rise-2 font-display text-[clamp(3.5rem,12vw,11rem)] leading-[0.85] tracking-tight">
           {location.name}
         </h1>
         <div className="rise rise-3 mt-8 max-w-2xl">
-          <LocationSearch currentLocation={location} onSelect={selectLocation} />
+          <LocationSearch
+            currentLocation={location}
+            ledger={ledger.spots}
+            onSelect={selectLocation}
+            onRemoveFromLedger={ledger.remove}
+          />
         </div>
       </section>
 
@@ -130,6 +156,22 @@ export function AppShell({ initialLocation, initialData }: Props) {
             subtitle={weather ? weather.label : 'Awaiting transmission…'}
           />
           {conditions ? <ConditionsReadout c={conditions} /> : <ConditionsSkeleton />}
+        </div>
+      </section>
+
+      {/* Tomorrow — the look-ahead */}
+      <section className="mx-auto mt-16 max-w-[1400px] px-6 md:px-12">
+        <div className="rise rise-6">
+          <SectionHeading
+            eyebrow="III."
+            title="Tomorrow at Dawn"
+            subtitle="by the hour, from 0500"
+          />
+          {conditions ? (
+            <TomorrowDispatch hourly={conditions.hourly} currentTime={conditions.timestamp} />
+          ) : (
+            <div className="h-56 animate-pulse border border-ink/15 bg-parchment-light/60" />
+          )}
         </div>
       </section>
 
@@ -232,20 +274,30 @@ function GearSkeleton() {
 }
 
 function formatDispatchNumber(d: Date) {
-  const y = d.getFullYear();
-  const doy = Math.floor((d.getTime() - new Date(y, 0, 0).getTime()) / 86_400_000);
-  const t = `${d.getHours().toString().padStart(2, '0')}${d
-    .getMinutes()
+  const y = d.getUTCFullYear();
+  const start = Date.UTC(y, 0, 0);
+  const doy = Math.floor((d.getTime() - start) / 86_400_000);
+  const t = `${d.getUTCHours().toString().padStart(2, '0')}${d
+    .getUTCMinutes()
     .toString()
     .padStart(2, '0')}`;
-  return `${y}.${doy.toString().padStart(3, '0')}.${t}`;
+  return `${y}.${doy.toString().padStart(3, '0')}.${t}Z`;
 }
 
 function fmtCoord(v: number, kind: 'lat' | 'lon') {
   const abs = Math.abs(v);
-  const deg = Math.floor(abs);
-  const min = Math.floor((abs - deg) * 60);
-  const sec = ((abs - deg) * 60 - min) * 60;
+  let deg = Math.floor(abs);
+  let min = Math.floor((abs - deg) * 60);
+  let sec = ((abs - deg) * 60 - min) * 60;
+  // Carry overflow from rounded seconds
+  if (sec >= 59.95) {
+    sec = 0;
+    min += 1;
+    if (min >= 60) {
+      min = 0;
+      deg += 1;
+    }
+  }
   const hemi = kind === 'lat' ? (v >= 0 ? 'N' : 'S') : (v >= 0 ? 'E' : 'W');
   return `${deg}°${min.toString().padStart(2, '0')}′${sec.toFixed(1)}″${hemi}`;
 }

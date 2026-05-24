@@ -1,6 +1,7 @@
 import type { Conditions } from '@/lib/types';
 import { celsiusFromF, compassBearing, weatherDescription } from '@/lib/weather';
 import { CompassRose } from './CompassRose';
+import { TideSparkline } from './TideSparkline';
 
 interface Props {
   c: Conditions;
@@ -53,6 +54,11 @@ export function ConditionsReadout({ c }: Props) {
           }
         />
       </div>
+      {c.tide.length > 0 && (
+        <div className="border-t border-ink/15 px-5 py-5 md:px-8">
+          <TideSparkline tide={c.tide} currentTime={c.timestamp} />
+        </div>
+      )}
       <div className="flex flex-wrap justify-between gap-x-6 gap-y-1 border-t border-ink/15 px-5 py-3 font-mono text-[10px] uppercase tracking-widest text-ink/55">
         <span>
           Humidity {Math.round(c.humidity)}% · Pressure {Math.round(c.pressureHpa)} hPa ·

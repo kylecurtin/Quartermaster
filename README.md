@@ -1,12 +1,28 @@
 # Quartermaster
 
 A surf-provisions dispatch: real-time wetsuit and accessory recommendations
-based on live water-surface temperature, air temperature, wind, and swell.
-Default port is **Lido Beach, New York** — search any coastline worldwide.
+based on live water-surface temperature, air temperature, wind, swell, and
+tide. Default port is **Lido Beach, New York** — search any coastline
+worldwide, save favorites to your **ledger**.
 
-Designed as a vintage maritime almanac. Built with Next.js 14 (App Router),
-TypeScript, and Tailwind. All data is pulled live from
-[Open-Meteo](https://open-meteo.com/) — **no API keys required**.
+Designed as a vintage maritime almanac in deep-water blue. Built with
+Next.js 14 (App Router), TypeScript, and Tailwind. All data is pulled live
+from [Open-Meteo](https://open-meteo.com/) — **no API keys required**.
+
+## Features
+
+- **Recommended provisions** keyed to live water temperature, with
+  wind-chill and cold-air-over-warm-water modifiers, plus an air-temp
+  proxy when sea-surface telemetry is unavailable
+- **Telemetry readout** — water, air, wind, swell, plus a 24-hour tide
+  sparkline with high/low markers
+- **Tomorrow at dawn** — hourly forecast columns 05:00–10:00 with a
+  per-hour wetsuit recommendation and a "prime hour" callout
+- **Ledger** — save any coastline to localStorage; saved spots appear in
+  the search dropdown when it's empty
+- **Combobox keyboard navigation** — arrow keys, Enter, Escape
+- Accessible: ARIA combobox roles, `aria-activedescendant`, screen-reader
+  hints on gear required vs. optional
 
 ## Quickstart
 
@@ -19,8 +35,8 @@ Visit `http://localhost:3000`.
 
 ## Deploy
 
-The app has no environment variables or build-time secrets. One-click on Vercel
-or any Node host that supports Next.js 14:
+The app has no environment variables or build-time secrets. One-click on
+Vercel or any Node host that supports Next.js 14:
 
 ```bash
 npx vercel --prod
@@ -28,38 +44,50 @@ npx vercel --prod
 
 ## Data sources
 
-| Source                          | Endpoint                                      |
-| ------------------------------- | --------------------------------------------- |
-| Sea-surface temp, waves, swell  | `marine-api.open-meteo.com/v1/marine`         |
-| Air temp, wind, weather code    | `api.open-meteo.com/v1/forecast`              |
-| Place search (any location)     | `geocoding-api.open-meteo.com/v1/search`      |
+| Source                                | Endpoint                                      |
+| ------------------------------------- | --------------------------------------------- |
+| Sea-surface temp, waves, swell, tide  | `marine-api.open-meteo.com/v1/marine`         |
+| Air temp, wind, weather, hourly       | `api.open-meteo.com/v1/forecast`              |
+| Place search (any location)           | `geocoding-api.open-meteo.com/v1/search`      |
 
-Server-rendered pages revalidate every 10 minutes; client-side searches fetch
-fresh data on demand.
+Server-rendered pages revalidate every 10 minutes; client-side searches
+fetch fresh data on demand.
 
 ## Wetsuit logic
 
-The recommendation is keyed off water-surface temperature, with wind-chill
-adding a hood suggestion when the air is cold and gusty. See `lib/gear.ts`.
+The base recommendation is keyed off water-surface temperature, with
+modifier passes applied for wind chill and cold-air-over-warmer-water
+mornings. See `lib/gear.ts`.
 
-| Water (°F) | Suit                            |
-| ---------- | ------------------------------- |
-| 75+        | Boardshorts                     |
-| 70–74      | 2 mm springsuit                 |
-| 65–69      | 2 mm spring or 3/2 mm fullsuit  |
-| 60–64      | 3/2 mm fullsuit                 |
-| 55–59      | 4/3 mm fullsuit + booties       |
-| 48–54      | 5/4 mm hooded + booties + gloves|
-| 40–47      | 6/5/4 mm hooded + 7 mm booties  |
-| < 40       | 6/5/4 mm hooded — extreme cold  |
+| Water (°F) | Suit                              |
+| ---------- | --------------------------------- |
+| 75+        | Boardshorts                       |
+| 70–74      | 2 mm springsuit                   |
+| 65–69      | 2 mm spring or 3/2 mm fullsuit    |
+| 60–64      | 3/2 mm fullsuit                   |
+| 55–59      | 4/3 mm fullsuit + booties         |
+| 48–54      | 5/4 mm hooded + booties + gloves  |
+| 40–47      | 6/5/4 mm hooded + 7 mm booties    |
+| < 40       | 6/5/4 mm hooded — extreme cold    |
+
+When sea-surface temperature is unavailable for a position, the
+recommendation falls back to air temperature as a ballpark proxy and
+surfaces the fallback honestly in the dispatch copy.
 
 ## Project layout
 
 ```
-app/            Next.js routes
-components/     React components
-lib/            API client, recommendation logic, weather codes
-public/         Favicon
+app/             Next.js routes + global styles
+components/      React components
+  AppShell.tsx     Main page composition
+  ConditionsReadout.tsx
+  GearDispatch.tsx
+  TomorrowDispatch.tsx    Section III (dawn-patrol hourly)
+  TideSparkline.tsx       Inline tide curve
+  LocationSearch.tsx      Combobox w/ ledger integration
+  CompassRose.tsx
+lib/             API client, recommendation logic, weather codes, ledger
+public/          Favicon
 ```
 
 ## License

@@ -5,12 +5,26 @@ import type { GeocodingResult, Location } from '@/lib/types';
 
 interface Props {
   currentLocation: Location;
+  ledger: Location[];
   onSelect: (location: Location) => void;
+  onRemoveFromLedger?: (location: Location) => void;
 }
 
 const LISTBOX_ID = 'qm-location-listbox';
 
-export function LocationSearch({ currentLocation, onSelect }: Props) {
+interface OptionRow {
+  kind: 'ledger' | 'search';
+  location: Location;
+  // For search results: extra metadata
+  raw?: GeocodingResult;
+}
+
+export function LocationSearch({
+  currentLocation,
+  ledger,
+  onSelect,
+  onRemoveFromLedger,
+}: Props) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<GeocodingResult[]>([]);
   const [open, setOpen] = useState(false);
@@ -19,10 +33,13 @@ export function LocationSearch({ currentLocation, onSelect }: Props) {
   const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>();
   const abortRef = useRef<AbortController | null>(null);
 
+  const trimmed = query.trim();
+
   useEffect(() => {
     setActiveIndex(-1);
-    if (query.trim().length < 2) {
+    if (trimmed.length < 2) {
       setResults([]);
+      setLoading(false);
       return;
     }
     clearTimeout(debounceRef.current);
@@ -33,7 +50,7 @@ export function LocationSearch({ currentLocation, onSelect }: Props) {
       setLoading(true);
       fetch(
         `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(
-          query,
+          trimmed,
         )}&count=6&language=en`,
         { signal: controller.signal },
       )
@@ -55,16 +72,27 @@ export function LocationSearch({ currentLocation, onSelect }: Props) {
         });
     }, 250);
     return () => clearTimeout(debounceRef.current);
-  }, [query]);
+  }, [trimmed]);
 
-  function handleSelect(r: GeocodingResult) {
-    onSelect({
-      name: r.name,
-      admin1: r.admin1,
-      country: r.country,
-      latitude: r.latitude,
-      longitude: r.longitude,
-    });
+  const rows: OptionRow[] =
+    trimmed.length < 2
+      ? ledger.map((l) => ({ kind: 'ledger', location: l }))
+      : results.map((r) => ({
+          kind: 'search',
+          location: {
+            name: r.name,
+            admin1: r.admin1,
+            country: r.country,
+            latitude: r.latitude,
+            longitude: r.longitude,
+          },
+          raw: r,
+        }));
+
+  const expanded = open && rows.length > 0;
+
+  function handleSelect(loc: Location) {
+    onSelect(loc);
     setQuery('');
     setOpen(false);
     setActiveIndex(-1);
@@ -77,25 +105,23 @@ export function LocationSearch({ currentLocation, onSelect }: Props) {
       setActiveIndex(-1);
       return;
     }
-    if (results.length === 0) return;
+    if (rows.length === 0) return;
 
     if (e.key === 'ArrowDown') {
       e.preventDefault();
       setOpen(true);
-      setActiveIndex((i) => (i + 1) % results.length);
+      setActiveIndex((i) => (i + 1) % rows.length);
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
       setOpen(true);
-      setActiveIndex((i) => (i <= 0 ? results.length - 1 : i - 1));
+      setActiveIndex((i) => (i <= 0 ? rows.length - 1 : i - 1));
     } else if (e.key === 'Enter') {
-      if (activeIndex >= 0 && results[activeIndex]) {
+      if (activeIndex >= 0 && rows[activeIndex]) {
         e.preventDefault();
-        handleSelect(results[activeIndex]);
+        handleSelect(rows[activeIndex].location);
       }
     }
   }
-
-  const expanded = open && results.length > 0;
 
   return (
     <div className="relative">
@@ -109,7 +135,6 @@ export function LocationSearch({ currentLocation, onSelect }: Props) {
           }}
           onFocus={() => setOpen(true)}
           onBlur={() => {
-            // Delay close so a click on a listbox option can still register.
             setTimeout(() => setOpen(false), 150);
           }}
           onKeyDown={handleKey}
@@ -121,7 +146,7 @@ export function LocationSearch({ currentLocation, onSelect }: Props) {
           aria-activedescendant={
             activeIndex >= 0 ? `${LISTBOX_ID}-${activeIndex}` : undefined
           }
-          aria-label="Search for a coastal location"
+          aria-label="Search for a coastal location, or browse your ledger"
           className="flex-1 border-0 bg-transparent py-1 font-serif text-lg italic placeholder:text-ink/35 focus:outline-none"
         />
         {loading && (
@@ -130,43 +155,69 @@ export function LocationSearch({ currentLocation, onSelect }: Props) {
       </div>
 
       {expanded && (
-        <ul
-          role="listbox"
-          id={LISTBOX_ID}
-          className="absolute left-0 right-0 top-full z-20 mt-2 max-h-80 overflow-y-auto border border-ink/25 bg-parchment-light shadow-dispatch"
-        >
-          {results.map((r, i) => (
-            <li
-              key={`${r.latitude}-${r.longitude}-${i}`}
-              id={`${LISTBOX_ID}-${i}`}
-              role="option"
-              aria-selected={activeIndex === i}
-              className={`border-b border-ink/10 last:border-b-0 ${
-                activeIndex === i ? 'bg-ink/[0.08]' : ''
-              }`}
-            >
-              <button
-                type="button"
-                onMouseDown={(e) => {
-                  e.preventDefault();
-                  handleSelect(r);
-                }}
-                onMouseEnter={() => setActiveIndex(i)}
-                className="flex w-full items-baseline justify-between gap-4 px-5 py-3 text-left transition-colors hover:bg-ink/[0.04]"
-              >
-                <span>
-                  <span className="font-serif text-base text-ink">{r.name}</span>
-                  <span className="ml-2 font-mono text-[10px] uppercase tracking-widest text-ink/55">
-                    {[r.admin1, r.country].filter(Boolean).join(' · ')}
-                  </span>
-                </span>
-                <span className="tabular font-mono text-[10px] text-ink/40">
-                  {r.latitude.toFixed(2)}, {r.longitude.toFixed(2)}
-                </span>
-              </button>
-            </li>
-          ))}
-        </ul>
+        <div className="absolute left-0 right-0 top-full z-20 mt-2 border border-ink/25 bg-parchment-light shadow-dispatch">
+          {trimmed.length < 2 && (
+            <div className="border-b border-ink/15 px-5 py-2 font-mono text-[10px] uppercase tracking-ultra text-ink/55">
+              Ledger · saved spots
+            </div>
+          )}
+          <ul role="listbox" id={LISTBOX_ID} className="max-h-80 overflow-y-auto">
+            {rows.map((row, i) => {
+              const loc = row.location;
+              return (
+                <li
+                  key={`${row.kind}-${loc.latitude}-${loc.longitude}-${i}`}
+                  id={`${LISTBOX_ID}-${i}`}
+                  role="option"
+                  aria-selected={activeIndex === i}
+                  className={`border-b border-ink/10 last:border-b-0 ${
+                    activeIndex === i ? 'bg-ink/[0.08]' : ''
+                  }`}
+                >
+                  <div className="group flex items-center">
+                    <button
+                      type="button"
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        handleSelect(loc);
+                      }}
+                      onMouseEnter={() => setActiveIndex(i)}
+                      className="flex flex-1 items-baseline justify-between gap-4 px-5 py-3 text-left transition-colors hover:bg-ink/[0.04]"
+                    >
+                      <span>
+                        <span className="font-serif text-base text-ink">{loc.name}</span>
+                        <span className="ml-2 font-mono text-[10px] uppercase tracking-widest text-ink/55">
+                          {[loc.admin1, loc.country].filter(Boolean).join(' · ')}
+                        </span>
+                      </span>
+                      <span className="tabular font-mono text-[10px] text-ink/40">
+                        {loc.latitude.toFixed(2)}, {loc.longitude.toFixed(2)}
+                      </span>
+                    </button>
+                    {row.kind === 'ledger' && onRemoveFromLedger && (
+                      <button
+                        type="button"
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          onRemoveFromLedger(loc);
+                        }}
+                        aria-label={`Remove ${loc.name} from ledger`}
+                        className="px-3 py-3 font-mono text-[10px] uppercase tracking-widest text-ink/35 transition-colors hover:text-rust"
+                      >
+                        remove
+                      </button>
+                    )}
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+          {trimmed.length >= 2 && rows.length === 0 && !loading && (
+            <div className="px-5 py-4 font-serif italic text-ink/55">
+              No harbor found by that name.
+            </div>
+          )}
+        </div>
       )}
     </div>
   );
