@@ -5,24 +5,26 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        // 'parchment' tokens now carry the dark ocean palette.
+        // Names retained for diff minimality; values inverted to navy.
         parchment: {
-          DEFAULT: '#F1EAD8',
-          light: '#F8F2E0',
-          dark: '#E5DCC4',
+          DEFAULT: '#0B1F3A',
+          light: '#13294A',
+          dark: '#071528',
         },
         ink: {
-          DEFAULT: '#0E1A2B',
-          soft: '#1F2A3C',
-          mid: '#3A4A5C',
+          DEFAULT: '#F4F1E8',
+          soft: '#E8E2D2',
+          mid: '#B8C0CD',
         },
-        muted: '#6B6358',
+        muted: '#8A95A8',
         copper: {
-          DEFAULT: '#9C6B3F',
-          deep: '#7C5A38',
+          DEFAULT: '#D4A45A',
+          deep: '#B88440',
         },
-        patina: '#4A6B5C',
-        rust: '#8B2E2A',
-        gold: '#B8924F',
+        patina: '#6BAFA9',
+        rust: '#E07B6C',
+        gold: '#E6B770',
       },
       fontFamily: {
         display: ['var(--font-display)', 'Bodoni 72', 'Didot', 'serif'],
@@ -33,7 +35,8 @@ const config: Config = {
         ultra: '0.32em',
       },
       boxShadow: {
-        dispatch: '0 30px 60px -30px rgba(14, 26, 43, 0.18), 0 8px 20px -10px rgba(14, 26, 43, 0.08)',
+        dispatch:
+          '0 30px 60px -30px rgba(0, 0, 0, 0.55), 0 8px 20px -10px rgba(0, 0, 0, 0.35)',
       },
     },
   },

@@ -108,28 +108,28 @@ export function AppShell({ initialLocation, initialData }: Props) {
         </div>
       </section>
 
-      {/* Conditions */}
+      {/* Recommendation — lead with the answer */}
       <section className="mx-auto max-w-[1400px] px-6 md:px-12">
         <div className="rise rise-4">
           <SectionHeading
             eyebrow="I."
-            title="Telemetry"
-            subtitle={weather ? weather.label : 'Awaiting transmission…'}
+            title="Recommended Provisions"
+            subtitle="from the stores"
             right={loading ? 'Updating…' : error ?? 'live · open-meteo.com'}
           />
-          {conditions ? <ConditionsReadout c={conditions} /> : <ConditionsSkeleton />}
+          {conditions ? <GearDispatch conditions={conditions} /> : <GearSkeleton />}
         </div>
       </section>
 
-      {/* Recommendation */}
+      {/* Conditions — the evidence */}
       <section className="mx-auto mt-16 max-w-[1400px] px-6 md:px-12">
         <div className="rise rise-5">
           <SectionHeading
             eyebrow="II."
-            title="Recommended Provisions"
-            subtitle="from the stores"
+            title="Telemetry"
+            subtitle={weather ? weather.label : 'Awaiting transmission…'}
           />
-          {conditions ? <GearDispatch conditions={conditions} /> : <GearSkeleton />}
+          {conditions ? <ConditionsReadout c={conditions} /> : <ConditionsSkeleton />}
         </div>
       </section>
 
@@ -138,11 +138,7 @@ export function AppShell({ initialLocation, initialData }: Props) {
         <div className="dispatch-rule mb-6 text-ink/40" />
         <div className="flex flex-col items-start justify-between gap-3 font-mono text-[10px] uppercase tracking-widest text-ink/55 md:flex-row md:items-center">
           <div>Compiled from buoy &amp; atmospheric telemetry · Open-Meteo · WMO</div>
-          <div className="flex items-center gap-3">
-            <span>Quartermaster</span>
-            <span className="text-ink/30">◆</span>
-            <span>MMXXVI</span>
-          </div>
+          <div>Quartermaster</div>
         </div>
       </footer>
     </div>

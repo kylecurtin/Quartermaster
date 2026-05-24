@@ -3,10 +3,11 @@
 @tailwind utilities;
 
 :root {
-  --color-parchment: #F1EAD8;
-  --color-parchment-light: #F8F2E0;
-  --color-ink: #0E1A2B;
-  --color-copper: #9C6B3F;
+  --color-parchment: #0B1F3A;
+  --color-parchment-light: #13294A;
+  --color-parchment-dark: #071528;
+  --color-ink: #F4F1E8;
+  --color-copper: #D4A45A;
 }
 
 html, body {
@@ -21,15 +22,15 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* ---- Paper grain overlay ---- */
+/* ---- Lantern-light grain on deep water ---- */
 .paper-grain {
   position: fixed;
   inset: 0;
   pointer-events: none;
   z-index: 1;
-  opacity: 0.32;
-  mix-blend-mode: multiply;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='400'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.06 0 0 0 0 0.06 0 0 0 0 0.06 0 0 0 0.55 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  opacity: 0.14;
+  mix-blend-mode: screen;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='400'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.95 0 0 0 0 0.93 0 0 0 0 0.85 0 0 0 0.5 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
 }
 
 .paper-vignette {
@@ -38,8 +39,8 @@ body {
   pointer-events: none;
   z-index: 1;
   background:
-    radial-gradient(ellipse at center, transparent 55%, rgba(124, 90, 56, 0.10) 100%),
-    linear-gradient(180deg, rgba(241, 234, 216, 0) 0%, rgba(229, 220, 196, 0.18) 100%);
+    radial-gradient(ellipse at center, transparent 50%, rgba(0, 0, 0, 0.35) 100%),
+    linear-gradient(180deg, rgba(7, 21, 40, 0) 0%, rgba(7, 21, 40, 0.35) 100%);
 }
 
 /* ---- Dispatch rule: horizontal line with diamond endcaps ---- */
@@ -78,7 +79,7 @@ body {
 /* ---- Hairline shimmer for loading state ---- */
 @keyframes shimmer {
   0% { opacity: 0.5; }
-  50% { opacity: 0.85; }
+  50% { opacity: 0.9; }
   100% { opacity: 0.5; }
 }
 .shimmer { animation: shimmer 1.8s ease-in-out infinite; }
@@ -88,12 +89,12 @@ body {
 .smallcaps { font-variant-caps: small-caps; letter-spacing: 0.08em; }
 
 ::selection {
-  background: rgba(156, 107, 63, 0.25);
+  background: rgba(212, 164, 90, 0.32);
   color: var(--color-ink);
 }
 
-/* Scrollbar — keep it understated */
+/* Scrollbar */
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(14, 26, 43, 0.18); border-radius: 0; }
-::-webkit-scrollbar-thumb:hover { background: rgba(14, 26, 43, 0.32); }
+::-webkit-scrollbar-thumb { background: rgba(244, 241, 232, 0.18); border-radius: 0; }
+::-webkit-scrollbar-thumb:hover { background: rgba(244, 241, 232, 0.32); }
