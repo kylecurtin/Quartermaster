@@ -1,0 +1,99 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-parchment: #F1EAD8;
+  --color-parchment-light: #F8F2E0;
+  --color-ink: #0E1A2B;
+  --color-copper: #9C6B3F;
+}
+
+html, body {
+  background: var(--color-parchment);
+  color: var(--color-ink);
+}
+
+body {
+  font-family: var(--font-serif), Garamond, Georgia, serif;
+  font-feature-settings: 'liga' 1, 'kern' 1, 'onum' 1;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ---- Paper grain overlay ---- */
+.paper-grain {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.32;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='400'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.06 0 0 0 0 0.06 0 0 0 0 0.06 0 0 0 0.55 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+}
+
+.paper-vignette {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  background:
+    radial-gradient(ellipse at center, transparent 55%, rgba(124, 90, 56, 0.10) 100%),
+    linear-gradient(180deg, rgba(241, 234, 216, 0) 0%, rgba(229, 220, 196, 0.18) 100%);
+}
+
+/* ---- Dispatch rule: horizontal line with diamond endcaps ---- */
+.dispatch-rule {
+  position: relative;
+  height: 1px;
+  background: currentColor;
+}
+.dispatch-rule::before,
+.dispatch-rule::after {
+  content: '';
+  position: absolute;
+  top: -3.5px;
+  width: 7px;
+  height: 7px;
+  background: var(--color-parchment);
+  border: 1px solid currentColor;
+  transform: rotate(45deg);
+}
+.dispatch-rule::before { left: -3.5px; }
+.dispatch-rule::after { right: -3.5px; }
+
+/* ---- Rise-in stagger ---- */
+@keyframes rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.rise { animation: rise 0.75s cubic-bezier(0.22, 0.7, 0.18, 1) both; }
+.rise-1 { animation-delay: 0.06s; }
+.rise-2 { animation-delay: 0.16s; }
+.rise-3 { animation-delay: 0.28s; }
+.rise-4 { animation-delay: 0.40s; }
+.rise-5 { animation-delay: 0.54s; }
+.rise-6 { animation-delay: 0.68s; }
+
+/* ---- Hairline shimmer for loading state ---- */
+@keyframes shimmer {
+  0% { opacity: 0.5; }
+  50% { opacity: 0.85; }
+  100% { opacity: 0.5; }
+}
+.shimmer { animation: shimmer 1.8s ease-in-out infinite; }
+
+/* ---- Misc ---- */
+.tabular { font-variant-numeric: tabular-nums; }
+.smallcaps { font-variant-caps: small-caps; letter-spacing: 0.08em; }
+
+::selection {
+  background: rgba(156, 107, 63, 0.25);
+  color: var(--color-ink);
+}
+
+/* Scrollbar — keep it understated */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(14, 26, 43, 0.18); border-radius: 0; }
+::-webkit-scrollbar-thumb:hover { background: rgba(14, 26, 43, 0.32); }
